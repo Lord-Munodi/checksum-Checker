@@ -1,7 +1,7 @@
 ﻿<Window x:Class="Checksum_Checker.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Checksum Checker" Height="350" Width="525" MinHeight="100" MinWidth="350" SizeToContent="Height">
+        Title="Checksum Checker" Height="350" Width="525" MinHeight="120" MinWidth="350" SizeToContent="Height">
     <Grid Margin="8, 6">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
@@ -14,18 +14,19 @@
                 <ColumnDefinition Width="auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <TextBlock Text="Source: " VerticalAlignment="Center"/>
-            <ComboBox Name="SourceSelector" SelectedIndex="0" Grid.Column="1" Margin="0, 0, 8, 0">
-                <ComboBoxItem Content="File"/>
-                <ComboBoxItem Content="String"/>
-            </ComboBox>
-            <DockPanel Grid.Column="2">
+            
+            <DockPanel Grid.Column="2" Name="FileInputInputter">
                 <Button Margin="-1, 0, 0, 0" Name="BrowseFileButton" Content="Browse" Click="BrowseFileButton_Click" DockPanel.Dock="Right"/>
                 <TextBox Name="FileNameInput" VerticalContentAlignment="Center"/>
             </DockPanel>
-            <StackPanel Orientation="Horizontal" Visibility="Collapsed">
-                <TextBox Name="StringInput" Width="120" VerticalContentAlignment="Center"/>
-            </StackPanel>
+            <Grid Grid.Column="2" Name="StringInputInputter" Visibility="Collapsed">
+                <TextBox Name="StringInput" HorizontalAlignment="Stretch" VerticalContentAlignment="Center"/>
+            </Grid>
+            <TextBlock Text="Source: " VerticalAlignment="Center"/>
+            <ComboBox Name="SourceSelector" SelectedIndex="0" Grid.Column="1" Margin="0, 0, 8, 0" Width="60" SelectionChanged="SourceSelector_SelectionChanged">
+                <ComboBoxItem Content="File"/>
+                <ComboBoxItem Content="String"/>
+            </ComboBox>
         </Grid>
         
         <Grid Grid.Row="2">
@@ -38,14 +39,14 @@
                 <ColumnDefinition Width="auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
+
+            <Button Name="SHA1sumButton" Content="SHA1" Click="SHAsumButton_Click" Padding="6,1" />
+            <ProgressBar Name="SHA1Progress" Grid.Column="1" Width="48" HorizontalAlignment="Right" Visibility="Collapsed" />
+            <TextBox Name="SHA1Output" Grid.Column="1" IsReadOnly="True" IsTabStop="False" BorderThickness="0" Background="Transparent" TextWrapping="Wrap" Tag="40" VerticalContentAlignment="Center" />
             
-                <Button Name="SHA1sumButton" Content="SHA1" Click="SHAsumButton_Click" DockPanel.Dock="Left" />
-                <ProgressBar Name="SHA1Progress" Grid.Column="1" Width="48" HorizontalAlignment="Right" Visibility="Collapsed" />
-                <TextBox Name="SHA1Output" Grid.Column="1" IsReadOnly="True" IsTabStop="False" BorderThickness="0" Background="Transparent" TextWrapping="Wrap" Tag="40" VerticalContentAlignment="Center" />
-            
-                <Button Name="SHA256sumButton" Grid.Row="2" Content="SHA256" Click="SHAsumButton_Click" DockPanel.Dock="Left" />
-                <ProgressBar Name="SHA256Progress" Grid.Row="2" Grid.Column="1" Width="48" HorizontalAlignment="Right" Visibility="Collapsed" />
-                <TextBox Name="SHA256Output" Grid.Row="2" Grid.Column="1" IsReadOnly="True" IsTabStop="False" BorderThickness="0" Background="Transparent" TextWrapping="Wrap" Tag="64" VerticalContentAlignment="Center"/>
+            <Button Name="SHA256sumButton" Grid.Row="2" Content="SHA256" Click="SHAsumButton_Click" Padding="6,1" />
+            <ProgressBar Name="SHA256Progress" Grid.Row="2" Grid.Column="1" Width="48" HorizontalAlignment="Right" Visibility="Collapsed" />
+            <TextBox Name="SHA256Output" Grid.Row="2" Grid.Column="1" IsReadOnly="True" IsTabStop="False" BorderThickness="0" Background="Transparent" TextWrapping="Wrap" Tag="64" VerticalContentAlignment="Center"/>
         </Grid>
         
     </Grid>

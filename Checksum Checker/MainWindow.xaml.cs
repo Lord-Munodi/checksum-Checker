@@ -55,6 +55,7 @@ namespace Checksum_Checker
 
         private async void SHAsumButton_Click(object sender, RoutedEventArgs e)
         {
+            // Figure out which hashing button was clicked and set references to controls and functions accordingly
             CancellationTokenSource cTokenSource;
             ProgressBar progressBar;
             TextBox outputTextBox;
@@ -78,12 +79,15 @@ namespace Checksum_Checker
                 throw new ArgumentException("Button " + ((Button)sender).Content + " not implemented");
             }
 
+            // Here the references set earlier are used
             if (FileNameInput.Text != null && FileNameInput.Text.Length > 0)
             {
+                // Cancel a previous hash if it's still running, this means repeatedly clicking restarts the hashing
                 cTokenSource.Cancel();
                 cTokenSource = new CancellationTokenSource();
                 CancellationToken token = cTokenSource.Token;
 
+                // Clear output and start calculating indicator
                 outputTextBox.Text = "";// new String(' ', int.Parse(outputTextBox.Tag.ToString()));
                 progressBar.IsIndeterminate = true;
                 progressBar.Visibility = System.Windows.Visibility.Visible;
@@ -96,11 +100,29 @@ namespace Checksum_Checker
                 }
                 catch (OperationCanceledException)
                 {
+                    // Catch exception and return so as not to stop progress indicator,this is because this
+                    // exception is thrown when the hash button is reclicked which means the next calculation is running
                     return;
                 }
+
+                // Turn off progress indicator and fix height to make result visible
                 progressBar.IsIndeterminate = false;
                 progressBar.Visibility = System.Windows.Visibility.Collapsed;
                 SizeToContent = System.Windows.SizeToContent.Height;
+            }
+        }
+
+        private void SourceSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (SourceSelector.SelectedIndex == 1)  // String selected, collapse file, expand string
+            {
+                StringInputInputter.Visibility = System.Windows.Visibility.Visible;
+                FileInputInputter.Visibility = System.Windows.Visibility.Collapsed;
+            }
+            else if (SourceSelector.SelectedIndex == 0) // File selected, collapse string, expand file
+            {
+                StringInputInputter.Visibility = System.Windows.Visibility.Collapsed;
+                FileInputInputter.Visibility = System.Windows.Visibility.Visible;
             }
         }
     }
