@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -60,36 +63,85 @@ namespace Checksum_Checker
             CancellationTokenSource cTokenSource;
             ProgressBar progressBar;
             TextBox outputTextBox;
-            Func<string, CancellationToken, string> func;
+            Func<Stream, CancellationToken, string> func;
             if(sender == SHA1sumButton)
             {
                 cTokenSource = sha1TokenSource;
                 progressBar = SHA1Progress;
                 outputTextBox = SHA1Output;
-                func = (x, y) => App.SHA1File(x, y);
+                func = (x, y) => App.hashStream(x, SHA1.Create(), y);
             }
             else if (sender == SHA256sumButton)
             {
                 cTokenSource = sha256TokenSource;
                 progressBar = SHA256Progress;
                 outputTextBox = SHA256Output;
-                func = (x, y) => App.SHA256File(x, y);
+                func = (x, y) => App.hashStream(x, SHA256.Create(), y);
             }
             else if (sender == MD5sumButton)
             {
                 cTokenSource = md5TokenSource;
                 progressBar = MD5Progress;
                 outputTextBox = MD5Output;
-                func = (x, y) => App.MD5File(x, y);
+                func = (x, y) => App.hashStream(x, MD5.Create(), y);
             }
             else
             {
                 throw new ArgumentException("Button " + ((Button)sender).Content + " not implemented");
             }
 
-            // Here the references set earlier are used
-            if (FileNameInput.Text != null && FileNameInput.Text.Length > 0)
+            Stream inStream;
+
+            if (getSourceType() == "File")
             {
+                try
+                {
+                    inStream = new FileStream(FileNameInput.Text, FileMode.Open, FileAccess.Read);
+                }
+                catch (Exception ex)
+                {
+                    if(ex is IOException || ex is ArgumentException)
+                    {
+                        Keyboard.Focus(FileNameInput);
+                        FileNameInput.SelectAll();
+                        MessageBox.Show("Cannot open file");
+                    }
+                    else
+                    {
+                        App.ReportExceptionMessage(ex);
+                    }
+                    return;
+                }
+            }
+            else
+            {
+                if(StringInput.Text.Length % 2 == 1)
+                {
+                    MessageBox.Show("Invalid string, needs an even number of nibbles");
+                    return;
+                }
+
+                if(!Regex.IsMatch(StringInput.Text, @"^[a-fA-F0-9]+$"))
+                {
+                    MessageBox.Show("Invalid string, contains non-hex characters");
+                    return;
+                }
+
+                byte[] stringAsBytes = new byte[StringInput.Text.Length / 2];
+                for(int i = 0; i < StringInput.Text.Length / 2; ++i)
+                {
+                    stringAsBytes[i] = Byte.Parse(StringInput.Text.Substring(i * 2, 2), System.Globalization.NumberStyles.AllowHexSpecifier);
+                }
+                
+                //foreach (byte b in stringAsBytes)
+                //    Console.Write(b);
+                //Console.WriteLine();
+                
+                inStream = new MemoryStream(stringAsBytes, false);
+            }
+
+            // Here the references set earlier are used
+            
                 // Cancel a previous hash if it's still running, this means repeatedly clicking restarts the hashing
                 cTokenSource.Cancel();
                 cTokenSource = new CancellationTokenSource();
@@ -104,7 +156,7 @@ namespace Checksum_Checker
 
                 try
                 {
-                    outputTextBox.Text = await Task.Run(() => func(text, token), token);
+                    outputTextBox.Text = await Task.Run(() => func(inStream, token), token);
                 }
                 catch (OperationCanceledException)
                 {
@@ -112,26 +164,36 @@ namespace Checksum_Checker
                     // exception is thrown when the hash button is reclicked which means the next calculation is running
                     return;
                 }
+                catch (FileNotFoundException)
+                {
+                    Keyboard.Focus(FileNameInput);
+                    FileNameInput.SelectAll();
+                }
+                
 
                 // Turn off progress indicator and fix height to make result visible
                 progressBar.IsIndeterminate = false;
                 progressBar.Visibility = System.Windows.Visibility.Collapsed;
                 SizeToContent = System.Windows.SizeToContent.Height;
-            }
         }
 
         private void SourceSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (SourceSelector.SelectedIndex == 1)  // String selected, collapse file, expand string
+            if (getSourceType() == "String")  // String selected, collapse file, expand string
             {
                 StringInputInputter.Visibility = System.Windows.Visibility.Visible;
                 FileInputInputter.Visibility = System.Windows.Visibility.Collapsed;
             }
-            else if (SourceSelector.SelectedIndex == 0) // File selected, collapse string, expand file
+            else if (getSourceType() == "File") // File selected, collapse string, expand file
             {
                 StringInputInputter.Visibility = System.Windows.Visibility.Collapsed;
                 FileInputInputter.Visibility = System.Windows.Visibility.Visible;
             }
+        }
+
+        private String getSourceType()
+        {
+            return SourceSelector.SelectedIndex == 0 ? "File" : "String";
         }
     }
 }
