@@ -115,15 +115,20 @@ namespace Checksum_Checker
             }
             else
             {
+                if(StringInput.Text.Length == 0)
+                {
+                    MessageBox.Show("Invalid string, is empty.");
+                    return;
+                }
                 if(StringInput.Text.Length % 2 == 1)
                 {
-                    MessageBox.Show("Invalid string, needs an even number of nibbles");
+                    MessageBox.Show("Invalid string, needs an even number of nibbles.");
                     return;
                 }
 
                 if(!Regex.IsMatch(StringInput.Text, @"^[a-fA-F0-9]+$"))
                 {
-                    MessageBox.Show("Invalid string, contains non-hex characters");
+                    MessageBox.Show("Invalid string, contains non-hex characters.");
                     return;
                 }
 
@@ -132,7 +137,8 @@ namespace Checksum_Checker
                 {
                     stringAsBytes[i] = Byte.Parse(StringInput.Text.Substring(i * 2, 2), System.Globalization.NumberStyles.AllowHexSpecifier);
                 }
-                
+
+                //Console.WriteLine(StringInput.Text);
                 //foreach (byte b in stringAsBytes)
                 //    Console.Write(b);
                 //Console.WriteLine();

@@ -17,72 +17,6 @@ namespace Checksum_Checker
     {
         private const int READ_CHUNK_SIZE = 4096;
 
-        /*public static string SHA1File(Stream stream, CancellationToken tok = default(CancellationToken))
-        {
-            BinaryReader infile = new BinaryReader(stream);
-            SHA1Managed sha = new SHA1Managed();
-
-            byte[] read;
-            do
-            {
-                if(tok.IsCancellationRequested)
-                {
-                    infile.Close();
-                    tok.ThrowIfCancellationRequested();
-                }
-                read = infile.ReadBytes(READ_CHUNK_SIZE);
-                sha.TransformBlock(read, 0, read.Length, null, 0);
-            } while (read.Length == READ_CHUNK_SIZE);
-            
-            infile.Close();
-            sha.TransformFinalBlock(new byte[0], 0, 0);
-            return BytesToStr(sha.Hash);
-        }
-
-        public static string SHA256File(Stream stream, CancellationToken tok = default(CancellationToken))
-        {
-            BinaryReader infile = new BinaryReader(stream);
-            SHA256Managed sha = new SHA256Managed();
-
-            byte[] read;
-            do
-            {
-                if (tok.IsCancellationRequested)
-                {
-                    infile.Close();
-                    tok.ThrowIfCancellationRequested();
-                }
-                read = infile.ReadBytes(READ_CHUNK_SIZE);
-                sha.TransformBlock(read, 0, read.Length, null, 0);
-            } while (read.Length == READ_CHUNK_SIZE);
-
-            infile.Close();
-            sha.TransformFinalBlock(new byte[0], 0, 0);
-            return BytesToStr(sha.Hash);
-        }
-
-        public static string MD5File(Stream stream, CancellationToken tok = default(CancellationToken))
-        {
-            BinaryReader infile = new BinaryReader(stream);
-            MD5 hashAlgo = MD5.Create();
-
-            byte[] read;
-            do
-            {
-                if (tok.IsCancellationRequested)
-                {
-                    infile.Close();
-                    tok.ThrowIfCancellationRequested();
-                }
-                read = infile.ReadBytes(READ_CHUNK_SIZE);
-                hashAlgo.TransformBlock(read, 0, read.Length, null, 0);
-            } while (read.Length == READ_CHUNK_SIZE);
-
-            infile.Close();
-            hashAlgo.TransformFinalBlock(new byte[0], 0, 0);
-            return BytesToStr(hashAlgo.Hash);
-        }*/
-
         public static string hashStream(Stream stream, HashAlgorithm hashAlgo, CancellationToken tok = default(CancellationToken))
         {
             BinaryReader infile = new BinaryReader(stream);
@@ -101,10 +35,10 @@ namespace Checksum_Checker
 
             infile.Close();
             hashAlgo.TransformFinalBlock(new byte[0], 0, 0);
-            return BytesToStr(hashAlgo.Hash);
+            return BytesToHexString(hashAlgo.Hash);
         }
 
-        private static string BytesToStr(byte[] bytes)
+        private static string BytesToHexString(byte[] bytes)
         {
             System.Text.StringBuilder str = new System.Text.StringBuilder();
 
