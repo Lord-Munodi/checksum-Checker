@@ -52,8 +52,9 @@ namespace Checksum_Checker
 
         private CancellationTokenSource sha1TokenSource = new CancellationTokenSource();
         private CancellationTokenSource sha256TokenSource = new CancellationTokenSource();
+        private CancellationTokenSource md5TokenSource = new CancellationTokenSource();
 
-        private async void SHAsumButton_Click(object sender, RoutedEventArgs e)
+        private async void hashsumButton_Click(object sender, RoutedEventArgs e)
         {
             // Figure out which hashing button was clicked and set references to controls and functions accordingly
             CancellationTokenSource cTokenSource;
@@ -73,6 +74,13 @@ namespace Checksum_Checker
                 progressBar = SHA256Progress;
                 outputTextBox = SHA256Output;
                 func = (x, y) => App.SHA256File(x, y);
+            }
+            else if (sender == MD5sumButton)
+            {
+                cTokenSource = md5TokenSource;
+                progressBar = MD5Progress;
+                outputTextBox = MD5Output;
+                func = (x, y) => App.MD5File(x, y);
             }
             else
             {

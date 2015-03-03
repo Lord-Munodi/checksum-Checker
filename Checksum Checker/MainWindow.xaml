@@ -34,19 +34,25 @@
                 <RowDefinition Height="auto" />
                 <RowDefinition Height="4" />
                 <RowDefinition Height="auto" />
+                <RowDefinition Height="4" />
+                <RowDefinition Height="auto" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Button Name="SHA1sumButton" Content="SHA1" Click="SHAsumButton_Click" Padding="6,1" />
+            <Button Name="SHA1sumButton" Content="SHA1" Click="hashsumButton_Click" Padding="6,1" />
             <ProgressBar Name="SHA1Progress" Grid.Column="1" Width="48" HorizontalAlignment="Right" Visibility="Collapsed" />
             <TextBox Name="SHA1Output" Grid.Column="1" IsReadOnly="True" IsTabStop="False" BorderThickness="0" Background="Transparent" TextWrapping="Wrap" Tag="40" VerticalContentAlignment="Center" />
             
-            <Button Name="SHA256sumButton" Grid.Row="2" Content="SHA256" Click="SHAsumButton_Click" Padding="6,1" />
+            <Button Name="SHA256sumButton" Grid.Row="2" Content="SHA256" Click="hashsumButton_Click" Padding="6,1" />
             <ProgressBar Name="SHA256Progress" Grid.Row="2" Grid.Column="1" Width="48" HorizontalAlignment="Right" Visibility="Collapsed" />
             <TextBox Name="SHA256Output" Grid.Row="2" Grid.Column="1" IsReadOnly="True" IsTabStop="False" BorderThickness="0" Background="Transparent" TextWrapping="Wrap" Tag="64" VerticalContentAlignment="Center"/>
+
+            <Button Name="MD5sumButton" Grid.Row="4" Content="MD5" Click="hashsumButton_Click" Padding="6,1" />
+            <ProgressBar Name="MD5Progress" Grid.Row="4" Grid.Column="1" Width="48" HorizontalAlignment="Right" Visibility="Collapsed" />
+            <TextBox Name="MD5Output" Grid.Row="4" Grid.Column="1" IsReadOnly="True" IsTabStop="False" BorderThickness="0" Background="Transparent" TextWrapping="Wrap" Tag="32" VerticalContentAlignment="Center"/>
         </Grid>
         
     </Grid>
