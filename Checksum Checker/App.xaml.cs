@@ -24,11 +24,7 @@ namespace Checksum_Checker
             byte[] read;
             do
             {
-                if (tok.IsCancellationRequested)
-                {
-                    infile.Close();
-                    tok.ThrowIfCancellationRequested();
-                }
+                tok.ThrowIfCancellationRequested();
                 read = infile.ReadBytes(READ_CHUNK_SIZE);
                 hashAlgo.TransformBlock(read, 0, read.Length, null, 0);
             } while (read.Length == READ_CHUNK_SIZE);

@@ -23,13 +23,28 @@ namespace Checksum_Checker
     /// </summary>
     public sealed partial class MainWindow : Window
     {
+        private const int SOURCE_IS_FILE = 0;
+        private const int SOURCE_IS_STRING = 1;
         public MainWindow()
         {
             InitializeComponent();
 
             string[] args = Environment.GetCommandLineArgs();
             if (args.Length > 1)
+            {
                 FileNameInput.Text = args[1];
+
+                // Note this is experimental and may change, if you find it useful let me know so it's not removed without warning
+                for (int i = 2; i < Environment.GetCommandLineArgs().Length; ++i)
+                {
+                    if (Environment.GetCommandLineArgs()[i].ToLower().Equals("-sha1"))
+                        hashsumButton_Click(SHA1sumButton, new RoutedEventArgs());
+                    if (Environment.GetCommandLineArgs()[i].ToLower().Equals("-sha256"))
+                        hashsumButton_Click(SHA256sumButton, new RoutedEventArgs());
+                    if(Environment.GetCommandLineArgs()[i].ToLower().Equals("-md5"))
+                        hashsumButton_Click(MD5sumButton, new RoutedEventArgs());
+                }
+            }
 
             //SHA1Output.Text = new String(' ', int.Parse(SHA1Output.Tag.ToString()));
             //SHA256Output.Text = new String(' ', int.Parse(SHA256Output.Tag.ToString()));
@@ -92,7 +107,7 @@ namespace Checksum_Checker
 
             Stream inStream;
 
-            if (getSourceType() == "File")
+            if (getSourceType() == SOURCE_IS_FILE)
             {
                 try
                 {
@@ -148,15 +163,13 @@ namespace Checksum_Checker
 
             // Here the references set earlier are used
             
-                // Cancel a previous hash if it's still running, this means repeatedly clicking restarts the hashing
-                cTokenSource.Cancel();
-                cTokenSource = new CancellationTokenSource();
                 CancellationToken token = cTokenSource.Token;
 
                 // Clear output and start calculating indicator
                 outputTextBox.Text = "";// new String(' ', int.Parse(outputTextBox.Tag.ToString()));
                 progressBar.IsIndeterminate = true;
                 progressBar.Visibility = System.Windows.Visibility.Visible;
+                ((Button)sender).IsEnabled = false;
 
                 String text = FileNameInput.Text;
 
@@ -166,9 +179,7 @@ namespace Checksum_Checker
                 }
                 catch (OperationCanceledException)
                 {
-                    // Catch exception and return so as not to stop progress indicator,this is because this
-                    // exception is thrown when the hash button is reclicked which means the next calculation is running
-                    return;
+                    // This only happens when cancel is clicked. Do nothing special, just ignore it and execute after-exception code.
                 }
                 catch (FileNotFoundException)
                 {
@@ -177,29 +188,50 @@ namespace Checksum_Checker
                 }
                 
 
-                // Turn off progress indicator and fix height to make result visible
+                // Turn off computing indicators and fix height to make result visible
                 progressBar.IsIndeterminate = false;
                 progressBar.Visibility = System.Windows.Visibility.Collapsed;
+                ((Button)sender).IsEnabled = true;
                 SizeToContent = System.Windows.SizeToContent.Height;
         }
 
         private void SourceSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (getSourceType() == "String")  // String selected, collapse file, expand string
+            if (getSourceType() == SOURCE_IS_STRING)  // String selected, collapse file, expand string
             {
                 StringInputInputter.Visibility = System.Windows.Visibility.Visible;
                 FileInputInputter.Visibility = System.Windows.Visibility.Collapsed;
             }
-            else if (getSourceType() == "File") // File selected, collapse string, expand file
+            else if (getSourceType() == SOURCE_IS_FILE) // File selected, collapse string, expand file
             {
                 StringInputInputter.Visibility = System.Windows.Visibility.Collapsed;
                 FileInputInputter.Visibility = System.Windows.Visibility.Visible;
             }
         }
 
-        private String getSourceType()
+        private void Clear_Click(object sender, RoutedEventArgs e)
         {
-            return SourceSelector.SelectedIndex == 0 ? "File" : "String";
+            sha1TokenSource.Cancel();
+            sha256TokenSource.Cancel();
+            md5TokenSource.Cancel();
+            sha1TokenSource = new CancellationTokenSource();
+            sha256TokenSource = new CancellationTokenSource();
+            md5TokenSource = new CancellationTokenSource();
+            SHA1Output.Clear();
+            SHA256Output.Clear();
+            MD5Output.Clear();
+        }
+
+        private void About_Click(object sender, RoutedEventArgs e)
+        {
+            var assembly = typeof(MainWindow).Assembly;
+
+            MessageBox.Show("Checksum Checker v." + assembly.GetName().Version.ToString() + "\n");
+        }
+
+        private int getSourceType()
+        {
+            return SourceSelector.SelectedIndex;
         }
     }
 }
