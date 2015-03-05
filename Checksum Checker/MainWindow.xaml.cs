@@ -25,25 +25,21 @@ namespace Checksum_Checker
     {
         private const int SOURCE_IS_FILE = 0;
         private const int SOURCE_IS_STRING = 1;
-        public MainWindow()
+        public MainWindow(string fileName, List<string> commands)
         {
             InitializeComponent();
 
-            string[] args = Environment.GetCommandLineArgs();
-            if (args.Length > 1)
+            // Set file name and start all algorithms specified in commands
+            FileNameInput.Text = fileName;
+            foreach (string command in commands)
             {
-                FileNameInput.Text = args[1];
-
                 // Note this is experimental and may change, if you find it useful let me know so it's not removed without warning
-                for (int i = 2; i < Environment.GetCommandLineArgs().Length; ++i)
-                {
-                    if (Environment.GetCommandLineArgs()[i].ToLower().Equals("-sha1"))
-                        hashsumButton_Click(SHA1sumButton, new RoutedEventArgs());
-                    if (Environment.GetCommandLineArgs()[i].ToLower().Equals("-sha256"))
-                        hashsumButton_Click(SHA256sumButton, new RoutedEventArgs());
-                    if(Environment.GetCommandLineArgs()[i].ToLower().Equals("-md5"))
-                        hashsumButton_Click(MD5sumButton, new RoutedEventArgs());
-                }
+                if (command.ToLower().Equals("-sha1"))
+                    hashsumButton_Click(SHA1sumButton, new RoutedEventArgs());
+                if (command.ToLower().Equals("-sha256"))
+                    hashsumButton_Click(SHA256sumButton, new RoutedEventArgs());
+                if (command.ToLower().Equals("-md5"))
+                    hashsumButton_Click(MD5sumButton, new RoutedEventArgs());
             }
 
             //SHA1Output.Text = new String(' ', int.Parse(SHA1Output.Tag.ToString()));
@@ -53,19 +49,11 @@ namespace Checksum_Checker
 
         private void BrowseFileButton_Click(object sender, RoutedEventArgs e)
         {
-            // Create OpenFileDialog
-            var dlg = new Microsoft.Win32.OpenFileDialog();
-
-            // Display OpenFileDialog by calling ShowDialog method
-            Nullable<bool> result = dlg.ShowDialog();
-
-            // Get the selected file name and display in a TextBox
+            // Open a file dialog box and set FileNameInput's text to the full name of selected file
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            Nullable<bool> result = dlg.ShowDialog(this);
             if (result == true)
-            {
-                // Open document
-                string filename = dlg.FileName;
-                FileNameInput.Text = filename;
-            }
+                FileNameInput.Text = dlg.FileName;
         }
 
         private CancellationTokenSource sha1TokenSource = new CancellationTokenSource();
@@ -106,7 +94,7 @@ namespace Checksum_Checker
             }
 
             Stream inStream;
-
+            // Set inStream to either a FileStream or MemoryStream depending on input source
             if (getSourceType() == SOURCE_IS_FILE)
             {
                 try
@@ -163,36 +151,36 @@ namespace Checksum_Checker
 
             // Here the references set earlier are used
             
-                CancellationToken token = cTokenSource.Token;
+            CancellationToken token = cTokenSource.Token;
 
-                // Clear output and start calculating indicator
-                outputTextBox.Text = "";// new String(' ', int.Parse(outputTextBox.Tag.ToString()));
-                progressBar.IsIndeterminate = true;
-                progressBar.Visibility = System.Windows.Visibility.Visible;
-                ((Button)sender).IsEnabled = false;
+            // Clear output and start calculating indicator
+            outputTextBox.Text = "";// new String(' ', int.Parse(outputTextBox.Tag.ToString()));
+            progressBar.IsIndeterminate = true;
+            progressBar.Visibility = System.Windows.Visibility.Visible;
+            ((Button)sender).IsEnabled = false;
 
-                String text = FileNameInput.Text;
+            String text = FileNameInput.Text;
 
-                try
-                {
-                    outputTextBox.Text = await Task.Run(() => func(inStream, token), token);
-                }
-                catch (OperationCanceledException)
-                {
-                    // This only happens when cancel is clicked. Do nothing special, just ignore it and execute after-exception code.
-                }
-                catch (FileNotFoundException)
-                {
-                    Keyboard.Focus(FileNameInput);
-                    FileNameInput.SelectAll();
-                }
+            try
+            {
+                outputTextBox.Text = await Task.Run(() => func(inStream, token), token);
+            }
+            catch (OperationCanceledException)
+            {
+                // This only happens when cancel is clicked. Do nothing special, just ignore it and execute after-exception code.
+            }
+            catch (FileNotFoundException)
+            {
+                Keyboard.Focus(FileNameInput);
+                FileNameInput.SelectAll();
+            }
                 
 
-                // Turn off computing indicators and fix height to make result visible
-                progressBar.IsIndeterminate = false;
-                progressBar.Visibility = System.Windows.Visibility.Collapsed;
-                ((Button)sender).IsEnabled = true;
-                SizeToContent = System.Windows.SizeToContent.Height;
+            // Turn off computing indicators and fix height to make result visible
+            progressBar.IsIndeterminate = false;
+            progressBar.Visibility = System.Windows.Visibility.Collapsed;
+            ((Button)sender).IsEnabled = true;
+            SizeToContent = System.Windows.SizeToContent.Height;
         }
 
         private void SourceSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
