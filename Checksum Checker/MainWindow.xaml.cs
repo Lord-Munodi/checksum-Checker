@@ -51,6 +51,7 @@ namespace Checksum_Checker
         {
             // Open a file dialog box and set FileNameInput's text to the full name of selected file
             Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.Filter = "All Files|*.*|Disc image|*.img; *.iso|Programs|*.exe; *.msi|Compressed files|*.bz2; *.gz; *.zip;|Video|*.flv; *.mp4; *.mkv"; // Filter files by extension 
             Nullable<bool> result = dlg.ShowDialog(this);
             if (result == true)
                 FileNameInput.Text = dlg.FileName;
@@ -213,8 +214,11 @@ namespace Checksum_Checker
         private void About_Click(object sender, RoutedEventArgs e)
         {
             var assembly = typeof(MainWindow).Assembly;
+            string version = assembly.GetName().Version.ToString();
+            while (version.EndsWith(".0"))
+                version = version.Substring(0, version.Length - 2);
 
-            MessageBox.Show("Checksum Checker v." + assembly.GetName().Version.ToString() + "\n");
+            MessageBox.Show("Checksum Checker v." + version + "\n");
         }
 
         private int getSourceType()
