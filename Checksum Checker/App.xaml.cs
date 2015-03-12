@@ -41,21 +41,18 @@ namespace Checksum_Checker
             }
         }
 
-        private const int READ_CHUNK_SIZE = 4096;
-
         public static string hashStream(Stream stream, HashAlgorithm hashAlgo, CancellationToken tok = default(CancellationToken))
         {
-            BinaryReader infile = new BinaryReader(stream);
-
-            byte[] read;
+            const int READ_CHUNK_SIZE = 4096;
+            byte[] read = new byte[READ_CHUNK_SIZE];
+            int bytesRead;
             do
             {
                 tok.ThrowIfCancellationRequested();
-                read = infile.ReadBytes(READ_CHUNK_SIZE);
-                hashAlgo.TransformBlock(read, 0, read.Length, null, 0);
-            } while (read.Length == READ_CHUNK_SIZE);
+                bytesRead = stream.Read(read, 0, READ_CHUNK_SIZE);
+                hashAlgo.TransformBlock(read, 0, bytesRead, null, 0);
+            } while (bytesRead > 0);
 
-            infile.Close();
             hashAlgo.TransformFinalBlock(new byte[0], 0, 0);
             return bytesToHexString(hashAlgo.Hash);
         }

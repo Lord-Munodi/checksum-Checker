@@ -41,10 +41,6 @@ namespace Checksum_Checker
                 if (command.ToLower().Equals("-md5"))
                     hashsumButton_Click(MD5sumButton, new RoutedEventArgs());
             }
-
-            //SHA1Output.Text = new String(' ', int.Parse(SHA1Output.Tag.ToString()));
-            //SHA256Output.Text = new String(' ', int.Parse(SHA256Output.Tag.ToString()));
-            //SHA1Output.HorizontalContentAlignment = System.Windows.HorizontalAlignment.Stretch;
         }
 
         private void BrowseFileButton_Click(object sender, RoutedEventArgs e)
@@ -141,11 +137,6 @@ namespace Checksum_Checker
                 {
                     stringAsBytes[i] = Byte.Parse(StringInput.Text.Substring(i * 2, 2), System.Globalization.NumberStyles.AllowHexSpecifier);
                 }
-
-                //Console.WriteLine(StringInput.Text);
-                //foreach (byte b in stringAsBytes)
-                //    Console.Write(b);
-                //Console.WriteLine();
                 
                 inStream = new MemoryStream(stringAsBytes, false);
             }
@@ -155,7 +146,7 @@ namespace Checksum_Checker
             CancellationToken token = cTokenSource.Token;
 
             // Clear output and start calculating indicator
-            outputTextBox.Text = "";// new String(' ', int.Parse(outputTextBox.Tag.ToString()));
+            outputTextBox.Text = "";
             progressBar.IsIndeterminate = true;
             progressBar.Visibility = System.Windows.Visibility.Visible;
             ((Button)sender).IsEnabled = false;
@@ -169,13 +160,7 @@ namespace Checksum_Checker
             catch (OperationCanceledException)
             {
                 // This only happens when cancel is clicked. Do nothing special, just ignore it and execute after-exception code.
-            }
-            catch (FileNotFoundException)
-            {
-                Keyboard.Focus(FileNameInput);
-                FileNameInput.SelectAll();
-            }
-                
+            }   
 
             // Turn off computing indicators and fix height to make result visible
             progressBar.IsIndeterminate = false;
