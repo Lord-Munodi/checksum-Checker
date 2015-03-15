@@ -21,10 +21,10 @@ namespace Checksum_Checker
             string[] args = Environment.GetCommandLineArgs();
             List<string> fileNames = new List<string>();
             List<string> commands = new List<string>();
-            // for each argument, if begins with '-' add to commands, else add to fileNames
+            // for each argument, if begins with "--" add to commands, else add to fileNames
             for(int i = 1; i < args.Length; ++i)
             {
-                (args[i].StartsWith("-") ? commands : fileNames).Add(args[i]);
+                (args[i].StartsWith("--") ? commands : fileNames).Add(args[i]);
             }
             // if no file name open window with no filename or commands
             if (fileNames.Count == 0)

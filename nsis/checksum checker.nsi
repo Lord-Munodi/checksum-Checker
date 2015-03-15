@@ -12,7 +12,7 @@
   ;Name and file
   !define APPNAME "Checksum Checker"
   !define ContextMenuString "Open with Checksum Checker"
-  !define Version "1.0"
+  !define Version "1.0.1 indev"
   Name "${APPNAME} ${Version}"
   OutFile "${APPNAME} installer.exe"
 
@@ -94,7 +94,7 @@ Section "Context menu" SecContextMenu
  
   ;add to user's explorer context menu in registry
   WriteRegStr HKCU "Software\Classes\*\shell\${ContextMenuString}\command" "" "$INSTDIR\Checksum Checker.exe $\"%1$\""
-  WriteRegStr HKCU "Software\Classes\*\shell\${ContextMenuString} -sha1\command" "" "$INSTDIR\Checksum Checker.exe $\"%1$\" -sha1"
+  WriteRegStr HKCU "Software\Classes\*\shell\${ContextMenuString} --sha1\command" "" "$INSTDIR\Checksum Checker.exe $\"%1$\" --sha1"
  
 SectionEnd
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -25,21 +26,35 @@ namespace Checksum_Checker
     {
         private const int SOURCE_IS_FILE = 0;
         private const int SOURCE_IS_STRING = 1;
+
+        private int calculating = 0;
+
+        private List<HashItem> hashesSupported;
         public MainWindow(string fileName, List<string> commands)
         {
             InitializeComponent();
+
+            hashesSupported = new List<HashItem>();
+            hashesSupported.Add(new HashItem("md5", "MD5", typeof(MD5)));
+            hashesSupported.Add(new HashItem("sha1", "SHA-1", typeof(SHA1)));
+            hashesSupported.Add(new HashItem("sha256", "SHA-256", typeof(SHA256)));
+            hashesSupported.Add(new HashItem("sha512", "SHA-512", typeof(SHA512)));
+#if ALLOW_CRC_HASH
+            hashesSupported.Add(new HashItem("crc32", "CRC32", typeof(CRC32)));
+#endif
+            Hashes.ItemsSource = hashesSupported;
 
             // Set file name and start all algorithms specified in commands
             FileNameInput.Text = fileName;
             foreach (string command in commands)
             {
                 // Note this is experimental and may change, if you find it useful let me know so it's not removed without warning
-                if (command.ToLower().Equals("-sha1"))
-                    hashsumButton_Click(SHA1sumButton, new RoutedEventArgs());
-                if (command.ToLower().Equals("-sha256"))
+                /*if (command.ToLower().Equals("--sha1"))
+                    hashButton_Click(SHA1sumButton, new RoutedEventArgs());
+                if (command.ToLower().Equals("--sha256"))
                     hashsumButton_Click(SHA256sumButton, new RoutedEventArgs());
-                if (command.ToLower().Equals("-md5"))
-                    hashsumButton_Click(MD5sumButton, new RoutedEventArgs());
+                if (command.ToLower().Equals("--md5"))
+                    hashsumButton_Click(MD5sumButton, new RoutedEventArgs());*/
             }
         }
 
@@ -51,122 +66,6 @@ namespace Checksum_Checker
             Nullable<bool> result = dlg.ShowDialog(this);
             if (result == true)
                 FileNameInput.Text = dlg.FileName;
-        }
-
-        private CancellationTokenSource sha1TokenSource = new CancellationTokenSource();
-        private CancellationTokenSource sha256TokenSource = new CancellationTokenSource();
-        private CancellationTokenSource md5TokenSource = new CancellationTokenSource();
-
-        private async void hashsumButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Figure out which hashing button was clicked and set references to controls and functions accordingly
-            CancellationTokenSource cTokenSource;
-            ProgressBar progressBar;
-            TextBox outputTextBox;
-            Func<Stream, CancellationToken, string> func;
-            if(sender == SHA1sumButton)
-            {
-                cTokenSource = sha1TokenSource;
-                progressBar = SHA1Progress;
-                outputTextBox = SHA1Output;
-                func = (x, y) => App.hashStream(x, SHA1.Create(), y);
-            }
-            else if (sender == SHA256sumButton)
-            {
-                cTokenSource = sha256TokenSource;
-                progressBar = SHA256Progress;
-                outputTextBox = SHA256Output;
-                func = (x, y) => App.hashStream(x, SHA256.Create(), y);
-            }
-            else if (sender == MD5sumButton)
-            {
-                cTokenSource = md5TokenSource;
-                progressBar = MD5Progress;
-                outputTextBox = MD5Output;
-                func = (x, y) => App.hashStream(x, MD5.Create(), y);
-            }
-            else
-            {
-                throw new ArgumentException("Button " + ((Button)sender).Content + " not implemented");
-            }
-
-            Stream inStream;
-            // Set inStream to either a FileStream or MemoryStream depending on input source
-            if (getSourceType() == SOURCE_IS_FILE)
-            {
-                try
-                {
-                    inStream = new FileStream(FileNameInput.Text, FileMode.Open, FileAccess.Read);
-                }
-                catch (Exception ex)
-                {
-                    if(ex is IOException || ex is ArgumentException)
-                    {
-                        Keyboard.Focus(FileNameInput);
-                        FileNameInput.SelectAll();
-                        MessageBox.Show("Cannot open file");
-                    }
-                    else
-                    {
-                        App.ReportExceptionMessage(ex);
-                    }
-                    return;
-                }
-            }
-            else
-            {
-                if(StringInput.Text.Length == 0)
-                {
-                    MessageBox.Show("Invalid string, is empty.");
-                    return;
-                }
-                if(StringInput.Text.Length % 2 == 1)
-                {
-                    MessageBox.Show("Invalid string, needs an even number of nibbles.");
-                    return;
-                }
-
-                if(!Regex.IsMatch(StringInput.Text, @"^[a-fA-F0-9]+$"))
-                {
-                    MessageBox.Show("Invalid string, contains non-hex characters.");
-                    return;
-                }
-
-                byte[] stringAsBytes = new byte[StringInput.Text.Length / 2];
-                for(int i = 0; i < StringInput.Text.Length / 2; ++i)
-                {
-                    stringAsBytes[i] = Byte.Parse(StringInput.Text.Substring(i * 2, 2), System.Globalization.NumberStyles.AllowHexSpecifier);
-                }
-                
-                inStream = new MemoryStream(stringAsBytes, false);
-            }
-
-            // Here the references set earlier are used
-            
-            CancellationToken token = cTokenSource.Token;
-
-            // Clear output and start calculating indicator
-            outputTextBox.Text = "";
-            progressBar.IsIndeterminate = true;
-            progressBar.Visibility = System.Windows.Visibility.Visible;
-            ((Button)sender).IsEnabled = false;
-
-            String text = FileNameInput.Text;
-
-            try
-            {
-                outputTextBox.Text = await Task.Run(() => func(inStream, token), token);
-            }
-            catch (OperationCanceledException)
-            {
-                // This only happens when cancel is clicked. Do nothing special, just ignore it and execute after-exception code.
-            }   
-
-            // Turn off computing indicators and fix height to make result visible
-            progressBar.IsIndeterminate = false;
-            progressBar.Visibility = System.Windows.Visibility.Collapsed;
-            ((Button)sender).IsEnabled = true;
-            SizeToContent = System.Windows.SizeToContent.Height;
         }
 
         private void SourceSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -183,32 +82,122 @@ namespace Checksum_Checker
             }
         }
 
-        private void Clear_Click(object sender, RoutedEventArgs e)
+        private void ContextMenu_Opened(object sender, RoutedEventArgs e)
         {
-            sha1TokenSource.Cancel();
-            sha256TokenSource.Cancel();
-            md5TokenSource.Cancel();
-            sha1TokenSource = new CancellationTokenSource();
-            sha256TokenSource = new CancellationTokenSource();
-            md5TokenSource = new CancellationTokenSource();
-            SHA1Output.Clear();
-            SHA256Output.Clear();
-            MD5Output.Clear();
+            ((MenuItem)((ContextMenu)sender).Items[0]).IsEnabled = (calculating > 0);
+            //((MenuItem)((ContextMenu)sender).Items[1]).Visibility = 
+        }
+
+        private void CancelAll_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var el in hashesSupported)
+            {
+                el.cancel();
+            }
+        }
+
+        private void ClearAll_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var el in hashesSupported)
+            {
+                el.Output = "";
+            }
         }
 
         private void About_Click(object sender, RoutedEventArgs e)
         {
             var assembly = typeof(MainWindow).Assembly;
-            string version = assembly.GetName().Version.ToString();
-            while (version.EndsWith(".0"))
-                version = version.Substring(0, version.Length - 2);
+            string version = FileVersionInfo.GetVersionInfo(assembly.Location).ProductVersion;
 
-            MessageBox.Show("Checksum Checker v." + version + "\n");
+            MessageBox.Show("Checksum Checker version: " + version + "\n");
         }
 
         private int getSourceType()
         {
             return SourceSelector.SelectedIndex;
+        }
+
+        private async void HashButton_Click(object sender, RoutedEventArgs e)
+        {
+            Stream inStream;
+            // Set inStream to either a FileStream or MemoryStream depending on input source
+            if (getSourceType() == SOURCE_IS_FILE)
+            {
+                try
+                {
+                    inStream = new FileStream(FileNameInput.Text, FileMode.Open, FileAccess.Read);
+                }
+                catch (Exception ex)
+                {
+                    if (ex is IOException || ex is ArgumentException)
+                    {
+                        Keyboard.Focus(FileNameInput);
+                        FileNameInput.SelectAll();
+                        MessageBox.Show("Cannot open file");
+                    }
+                    else
+                    {
+                        App.ReportExceptionMessage(ex);
+                    }
+                    return;
+                }
+            }
+            else
+            {
+                if (StringInput.Text.Length == 0)
+                {
+                    MessageBox.Show("Invalid string, is empty.");
+                    return;
+                }
+                if (StringInput.Text.Length % 2 == 1)
+                {
+                    MessageBox.Show("Invalid string, needs an even number of nibbles.");
+                    return;
+                }
+
+                if (!Regex.IsMatch(StringInput.Text, @"^[a-fA-F0-9]+$"))
+                {
+                    MessageBox.Show("Invalid string, contains non-hex characters.");
+                    return;
+                }
+
+                byte[] stringAsBytes = new byte[StringInput.Text.Length / 2];
+                for (int i = 0; i < StringInput.Text.Length / 2; ++i)
+                {
+                    stringAsBytes[i] = Byte.Parse(StringInput.Text.Substring(i * 2, 2), System.Globalization.NumberStyles.AllowHexSpecifier);
+                }
+
+                inStream = new MemoryStream(stringAsBytes, false);
+            }
+
+            HashItem item = hashesSupported.Find((x) => x.ShortName == ((string)((Button)sender).Tag));
+            var node = ((Grid)((Button)sender).Parent);
+            ProgressBar indicator = (ProgressBar)node.FindName("CalculatingIndicator");
+
+            // Clear output and start calculating indicator
+            item.Output = "";
+            indicator.IsIndeterminate = true;
+            indicator.Visibility = System.Windows.Visibility.Visible;
+            ((Button)sender).IsEnabled = false;
+            ++calculating;
+
+            try
+            {
+                CancellationToken ctoken = item.CancellationToken;
+                Func<Stream, HashAlgorithm, CancellationToken, string> func = (s, ha, ct) => App.hashStream(s, ha, ct);
+                item.Output = await Task.Run(() => func(inStream, item.HashAlgorithm, ctoken));
+            }
+            catch (OperationCanceledException)
+            {
+                // This only happens when cancel is clicked. Do nothing special, just ignore it and execute after-exception code.
+            }
+
+            // Turn off computing indicators and fix height to make result visible
+            --calculating;
+            indicator.IsIndeterminate = false;
+            indicator.Visibility = System.Windows.Visibility.Collapsed;
+            ((Button)sender).IsEnabled = true;
+            SizeToContent = System.Windows.SizeToContent.Height;
         }
     }
 }

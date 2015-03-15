@@ -3,8 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Checksum Checker" Width="525" MinHeight="120" MinWidth="350" SizeToContent="Height">
     <Window.ContextMenu>
-        <ContextMenu>
-            <MenuItem Name="Clear" Header="Clear" Click="Clear_Click" />
+        <ContextMenu Opened="ContextMenu_Opened">
+            <MenuItem Name="CancelAll" Header="Cancel All" Click="CancelAll_Click" />
+            <MenuItem Name="ClearAll" Header="Clear All" Click="ClearAll_Click" />
             <Separator />
             <MenuItem Name="About" Header="About" Click="About_Click" />
         </ContextMenu>
@@ -14,6 +15,7 @@
             <RowDefinition Height="auto" />
             <RowDefinition Height="18" />
             <RowDefinition Height="auto" />
+            <!--<RowDefinition Height="auto" />-->
         </Grid.RowDefinitions>
         <Grid>
             <Grid.ColumnDefinitions>
@@ -35,38 +37,34 @@
                 <ComboBoxItem Content="String"/>
             </ComboBox>
         </Grid>
-        
-        <Grid Grid.Row="2">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="auto" />
-                <RowDefinition Height="4" />
-                <RowDefinition Height="auto" />
-                <RowDefinition Height="4" />
-                <RowDefinition Height="auto" />
-                <RowDefinition Height="auto" />
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="auto" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            
-            <Button Name="SHA1sumButton" Content="SHA1" Click="hashsumButton_Click" Padding="6,1" />
-            <ProgressBar Name="SHA1Progress" Grid.Column="1" Width="48" HorizontalAlignment="Right" Visibility="Collapsed" />
-            <TextBox Name="SHA1Output" Grid.Column="1" IsReadOnly="True" IsTabStop="False" BorderThickness="0" Background="Transparent" TextWrapping="Wrap" Tag="40" VerticalContentAlignment="Center" />
 
-            <Button Name="SHA256sumButton" Grid.Row="2" Content="SHA256" Click="hashsumButton_Click" Padding="6,1" />
-            <ProgressBar Name="SHA256Progress" Grid.Row="2" Grid.Column="1" Width="48" HorizontalAlignment="Right" Visibility="Collapsed" />
-            <TextBox Name="SHA256Output" Grid.Row="2" Grid.Column="1" IsReadOnly="True" IsTabStop="False" BorderThickness="0" Background="Transparent" TextWrapping="Wrap" Tag="64" VerticalContentAlignment="Center"/>
-
-            <Button Name="MD5sumButton" Grid.Row="4" Content="MD5" Click="hashsumButton_Click" Padding="6,1" />
-            <ProgressBar Name="MD5Progress" Grid.Row="4" Grid.Column="1" Width="48" HorizontalAlignment="Right" Visibility="Collapsed" />
-            <TextBox Name="MD5Output" Grid.Row="4" Grid.Column="1" IsReadOnly="True" IsTabStop="False" BorderThickness="0" Background="Transparent" TextWrapping="Wrap" Tag="32" VerticalContentAlignment="Center"/>
-
-            <!--<StackPanel Orientation="Horizontal" Grid.Row="5" Grid.ColumnSpan="2" HorizontalAlignment="Center">
-                <Button Name="CancelButton" Content="Cancel"  Padding="6,1" Margin="0,0,4,0"/>
-                <Button Name="ClearButton" Content="Clear"  Padding="6,1" Margin="4,0,0,0"/>
-            </StackPanel>-->
+        <Grid Grid.Row="2" Grid.IsSharedSizeScope="True">
+            <ItemsControl Name="Hashes">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition SharedSizeGroup="A" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button Name="HashButton" Content="{Binding ButtonLabel}" Padding="6,1" Click="HashButton_Click" Tag="{Binding ShortName}"/>
+                            <ProgressBar Name="CalculatingIndicator" Grid.Column="1" Width="48" HorizontalAlignment="Right" Visibility="Collapsed" />
+                            <TextBox Name="Output" Text="{Binding Output}" Grid.Column="1" IsReadOnly="True" IsTabStop="False" BorderThickness="0" Background="Transparent" TextWrapping="Wrap" Tag="40" VerticalContentAlignment="Center" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </Grid>
+
+
+        <!--<Grid Grid.Row="3" Grid.ColumnSpan="2" HorizontalAlignment="Center" Grid.IsSharedSizeScope="True">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition SharedSizeGroup="B" />
+                <ColumnDefinition SharedSizeGroup="B" />
+            </Grid.ColumnDefinitions>
+            <Button Name="CancelButton" Content="Cancel" Padding="6,1" Margin="0,0,3,0"/>
+            <Button Name="ClearButton" Grid.Column="1" Content="Clear" Padding="6,1" Margin="3,0,0,0"/>
+        </Grid>-->
         
     </Grid>
 </Window>
